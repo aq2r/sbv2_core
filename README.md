@@ -4,6 +4,8 @@
 
 主に src/tts.rs 部分を変更しています。
 
+### LICENSE
+
 ライセンス: [LICENSE](./LICENSE)
 
 オリジナルのライセンス: [LICENSE.original](/LICENSE.original)
