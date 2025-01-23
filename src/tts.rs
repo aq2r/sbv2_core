@@ -56,7 +56,7 @@ impl TtsModelHolder {
     where
         T: AsRef<[u8]>,
     {
-        let bert = crate::model::load_model_session(bert_model_bytes)?;
+        let bert = crate::model::load_model_session(bert_model_bytes, true)?;
         let tokenizer = Tokenizer::from_bytes(tokenizer_bytes)?;
 
         let models = match max_loaded_models {
@@ -147,7 +147,7 @@ impl TtsModelHolder {
                 let session = if max_loaded {
                     None
                 } else {
-                    Some(crate::model::load_model_session(&vits2_bytes)?)
+                    Some(crate::model::load_model_session(&vits2_bytes, false)?)
                 };
 
                 let model = UpperLimitTtsModel {
@@ -162,7 +162,7 @@ impl TtsModelHolder {
 
             EitherTtsModelVec::NoLimit(vec) => {
                 let style_vectors = crate::style::load_style(style_vectors_bytes)?;
-                let session = crate::model::load_model_session(&vits2_bytes)?;
+                let session = crate::model::load_model_session(&vits2_bytes, false)?;
 
                 let model = NoUpperLimitTtsModel {
                     model_ident: model_ident.to_string(),
@@ -320,7 +320,7 @@ impl TtsModelHolder {
             }
         };
 
-        let sbv2_session = crate::model::load_model_session(&model.bytes)?;
+        let sbv2_session = crate::model::load_model_session(&model.bytes, false)?;
 
         let models = match &mut self.models {
             EitherTtsModelVec::Limit(vec) => vec,

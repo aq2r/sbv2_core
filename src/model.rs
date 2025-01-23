@@ -3,11 +3,24 @@ use ort::{GraphOptimizationLevel, Session};
 
 use crate::errors::Sbv2CoreError;
 
-pub fn load_model_session<T>(model_bytes: T) -> Result<Session, Sbv2CoreError>
+pub fn load_model_session<T>(model_bytes: T, is_bert: bool) -> Result<Session, Sbv2CoreError>
 where
     T: AsRef<[u8]>,
 {
     let mut execution_providers = vec![ort::CPUExecutionProvider::default().build()];
+
+    if cfg!(feature = "tensorrt") {
+        if is_bert {
+            execution_providers.push(
+                ort::TensorRTExecutionProvider::default()
+                    .with_fp16(true)
+                    .with_profile_min_shapes("input_ids:1x1,attention_mask:1x1")
+                    .with_profile_max_shapes("input_ids:1x100,attention_mask:1x100")
+                    .with_profile_opt_shapes("input_ids:1x25,attention_mask:1x25")
+                    .build(),
+            );
+        }
+    }
 
     if cfg!(feature = "cuda") {
         let mut cuda = ort::CUDAExecutionProvider::default()
@@ -18,6 +31,14 @@ where
         }
 
         execution_providers.push(cuda.build());
+    }
+
+    if cfg!(feature = "directml") {
+        execution_providers.push(ort::DirectMLExecutionProvider::default().build());
+    }
+
+    if cfg!(feature = "coreml") {
+        execution_providers.push(ort::CoreMLExecutionProvider::default().build());
     }
 
     let session = Session::builder()?
